@@ -12,6 +12,8 @@ import History from "./pages/company/History";
 import Partner from "./pages/company/Partner";
 import Good from "./pages/good/Good";
 import { useState } from "react";
+import Schedule from "./pages/Schedule";
+import NotFound from "./pages/NotFound";
 
 function App() {
   // 복잡한 데이터
@@ -64,8 +66,10 @@ function App() {
             <Route path="modify/:id" element={<h1>제품 수정</h1>}></Route>
           </Route>
 
+          <Route path="/schedule" element={<Schedule />}></Route>
+
           {/* 잘못된 경로 */}
-          <Route path="*" element={<h1>잘못된 경로입니다.</h1>}></Route>
+          <Route path="*" element={<NotFound />}></Route>
         </Routes>
         <Footer></Footer>
       </div>
