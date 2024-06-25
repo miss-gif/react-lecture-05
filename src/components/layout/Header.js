@@ -1,3 +1,6 @@
-export const Header = ({ title, age, study, hobby, say, info, comp }) => {
-  return <header className="header"></header>;
+export const Header = ({ login }) => {
+  console.log("Header Header Header");
+  return (
+    <header className="header">{login ? "정보수정" : "로그인필요"}</header>
+  );
 };
