@@ -1,0 +1,33 @@
+.wrap {
+  position: relative;
+  background: "red";
+}
+.wrap .header button {
+  border: 5px solid blue;
+}
+
+@media screen and (max-width: 2028px) {
+  .wrap {
+    background: orange;
+  }
+}
+@media screen and (max-width: 2028px) {
+  .wrap {
+    background: orange;
+  }
+}
+@media screen and (max-width: 2028px) {
+  .wrap {
+    background: orange;
+  }
+}
+@media screen and (max-width: 2028px) {
+  .wrap {
+    background: orange;
+  }
+}
+@media screen and (max-width: 2028px) {
+  .wrap {
+    background: orange;
+  }
+}/*# sourceMappingURL=main.css.map */
