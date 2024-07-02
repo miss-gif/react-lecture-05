@@ -9,17 +9,19 @@ import {
 } from "./apis/todos/apistodos";
 
 const App = () => {
-  useEffect(() => {
-    // getTodo(3);
+  useEffect(async () => {
+    const result = await getTodo(3);
+    console.log(result);
+
     // getTodos();
-    const todo = {
-      title: "안녕하세요. 오늘 할일입니다.",
-      completed: false,
-    };
+    // const todo = {
+    //   title: "안녕하세요. 오늘 할일입니다.",
+    //   completed: false,
+    // };
     // postTodo(todo);
     // putTodo(3, todo);
     // patchTodo(5, todo);
-    deleteTodo(10);
+    // deleteTodo(10);
   }, []);
   return <div></div>;
 };
