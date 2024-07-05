@@ -2,41 +2,50 @@ import React, { useContext, useState } from "react";
 import { TodoContext } from "../../context/TodoContextProvider";
 
 const TodoAdd = () => {
+  // context 에 연결된  state 관리 Reducer 함수 를 호출함.
   const { dispatch } = useContext(TodoContext);
+
+  // 사용자가 입력한 내용
   const [content, setContent] = useState("");
 
-  const handleChange = e => {
-    setContent(e.target.value);
-  };
-
   const handleClick = () => {
+    // 공백처리
     if (content.trim() === "") {
-      alert("할 일을 입력하세요.");
+      alert("내용을 입력하세요.");
       return;
     }
-    dispatch({
+    const todo = {
       type: "ADD_TODO",
-      payload: { content, isCompleted: false },
-    });
-    setContent(""); // 입력 필드를 초기화합니다.
+      payload: { content: content, isComplted: false },
+    };
+    dispatch(todo);
+    setContent("");
   };
-
+  // 입력창 Enter 키 처리
   const handleKeyPress = e => {
     if (e.key === "Enter") {
       handleClick();
     }
   };
-
   return (
     <div>
       <input
         type="text"
         value={content}
-        onChange={handleChange}
-        onKeyDown={handleKeyPress}
-        placeholder="할 일을 입력하세요"
+        onKeyDown={e => {
+          handleKeyPress(e);
+        }}
+        onChange={e => {
+          setContent(e.target.value);
+        }}
       />
-      <button onClick={handleClick}>할일추가</button>
+      <button
+        onClick={() => {
+          handleClick();
+        }}
+      >
+        할일 추가
+      </button>
     </div>
   );
 };

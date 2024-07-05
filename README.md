@@ -1,199 +1,355 @@
-# Context API 와 useReducer 활용
+# Todo 서비스를 Context API 와 useReducer 로 만들기
 
-- useReducer
-  : 앱 전체 상태, 즉 state 를 효율적으로 관리
-  : 복잡한 state 에 대한 효율적 처리
-  : 코드 가독성 좋음
-  : Redux-Toolkit(RTK) 를 이해하기 위한 기초
-  : 작은 규모의 프로젝트에서 적극적 활용
+## 1. 기본 구조
 
-## 1. js 버전의 useReducer
-
-- /src/bucketReducer.js
+- /src/AppTodo.js 생성
+  : Context API 로 상태를 관리한 내용을 공급(Provider) 역할
 
 ```js
-import React, { createContext, useEffect, useReducer, useState } from "react";
-// 목표는 useState 대신에 useReducer 활용
+import React from "react";
+import TodoList from "./components/todo/TodoList";
+import TodoAdd from "./components/todo/TodoAdd";
+import TodoContextProvider from "./context/TodoContextProvider";
 
-// 1단계 state 의 초기값 셋팅
-// : 객체 리터럴을 사용한다.
-// : 객체 리터럴에 필요한 만큼 key 이름을 정의한다.
-const initialState = { bucket: [] };
+const AppTodo = () => {
+  return (
+    <TodoContextProvider>
+      <TodoList />
+      <TodoAdd />
+    </TodoContextProvider>
+  );
+};
 
-// 2단계 상태를 업데이트 하는 함수를 생성
-// : reducer 함수 만들기
-// : 무조건 형식은 약속 되어 있음.
-const bucketReducer = (state, action) => {
-  // switch 문을 쓰세요.
-  // state :  현재 값(상태)
-  // action : {type:"구분 글자", payload: "업데이트할 값" }
+export default AppTodo;
+```
+
+- /src/context/TodoContextProvider.js 파일생성
+  : Context 와 Reducer 를 통해서 상태관리 기능 지원
+
+```js
+import React, { useEffect, useReducer } from "react";
+import { createContext } from "react";
+// 1. 상태정보 즉 state 를 관리해줄 context 생성
+export const TodoContext = createContext(null);
+// 2. Reducer 즉, 상태를 업데이트 및 관리 할 수 있는 기능을 부여하기 위한 작업
+// 2.1. 관리하고 싶은 데이터의 기본 설정을 진행한다.
+
+// 데이터 저장하기 및 불러오기 (localStorage 활용)
+// 저장이 된 내용은 단순한 글자입니다. 모양이 {...} 이더라도 그냥 글자입니다.
+const initialState = {
+  todos: JSON.parse(localStorage.getItem("todos")) || [],
+  // 현재 새로운 할일이 등록되면 고유한 id 를 부여해야 한다.
+  // 고유한 id 를 uid 라고 합니다.
+  // uid 는 unique id 라고 합니다.
+  // BE 는 pk 라고 하기도 합니다.
+  // 보통 {id:시간, contents:할일, isCompleted:완료여부}
+  // Context 에서 값을 증가 시킴으로 처리
+  nextId: JSON.parse(localStorage.getItem("nextId")) || 1,
+};
+// 2.2. Reducer 함수를 만들어줌. (dispatch 하면 실행될 함수)
+// - Reducer 함수에는 매개변수 2개가 약속
+// - state :  관리할 데이터
+// - action: 객체 {type, payload}
+
+// 2.3. 가능하면 action.type 은 상수로 만든다.
+export const TODO_ACTION_TYPE = {
+  ADD_TODO: "ADD_TODO",
+  DELETE_TODO: "DELETE_TODO",
+  MODIFY_TODO: "MODIFY_TODO",
+};
+
+const totoReducer = (state, action) => {
+  // 관례상 switch 문
   switch (action.type) {
-    case "SET_BUCKET":
-      return { ...state, bucket: action.payload };
+    case TODO_ACTION_TYPE.ADD_TODO:
+      // action.payload 에 담긴 데이터를 state 로 업데이트 한다.
+      return {
+        ...state,
+        todos: [...state.todos, { ...action.payload, uid: state.nextId }],
+        nextId: state.nextId + 1,
+      };
+    case TODO_ACTION_TYPE.DELETE_TODO:
+      return {
+        ...state,
+        todos: state.todos.filter(item => item.uid !== action.payload.uid),
+      };
+
+    case TODO_ACTION_TYPE.MODIFY_TODO:
+      return {
+        ...state,
+        todos: state.todos.map(item =>
+          item.uid === action.payload.uid
+            ? { ...item, ...action.payload }
+            : item,
+        ),
+      };
     default:
       return state;
   }
 };
 
-export const BucketContext = createContext();
-const BucketProvider = ({ children }) => {
-  // 3단계 useReducer  훅 정의
-  const [state, dispatch] = useReducer(bucketReducer, initialState);
-  //   const [bucket, setBucket] = useState(null);
+const TodoContextProvider = ({ children }) => {
+  // 2.3. useReducer (dispatch 용 함수, 초기값 설정)
+  const [state, dispatch] = useReducer(totoReducer, initialState);
 
+  // localStorage 데이터 저장
   useEffect(() => {
-    // useState 초기값 셋팅
-    // const 초기값 = [];
-
-    // setBucket(초기값);
-    // useReducer 를 이용한 state 초기값 셋팅
-    // 형식이 정해져 있다.
-    dispatch({ type: "SET_BUCKET", payload: [] });
-  }, []);
+    localStorage.setItem("todos", JSON.stringify(state.todos));
+    localStorage.setItem("nextId", JSON.stringify(state.nextId));
+  }, [state]);
   return (
-    <BucketContext.Provider value={{ state, dispatch }}>
+    <TodoContext.Provider value={{ state: state.todos, dispatch }}>
       {children}
-    </BucketContext.Provider>
+    </TodoContext.Provider>
   );
 };
 
-export default BucketProvider;
+export default TodoContextProvider;
 ```
 
-- /src/AppRudcer.js
+- /src/component/todo 폴더생성
+
+- /src/component/todo/TodoAdd.js
+  : Context 업데이트(Reduce 의 dispatch 적용)
 
 ```js
-import React, { useContext } from "react";
-import BucketProvider, { BucketContext } from "./context/BucketProvider";
+import React, { useContext, useState } from "react";
+import { TodoContext } from "../../context/TodoContextProvider";
 
-const AppReducer = () => {
-  // contex 의 value 사용하겠다.
-  //   const { bucket, setBucket } = useContext(BucketContext);
-  const { state, dispatch } = useContext(BucketContext);
+const TodoAdd = () => {
+  // context 에 연결된  state 관리 Reducer 함수 를 호출함.
+  const { dispatch } = useContext(TodoContext);
+
+  // 사용자가 입력한 내용
+  const [content, setContent] = useState("");
 
   const handleClick = () => {
-    // setBucket([
-    //   { pk: 1, goodname: "사과" },
-    //   { pk: 2, goodname: "딸기" },
-    // ]);
-    const data = [
-      { pk: 1, goodname: "사과" },
-      { pk: 2, goodname: "딸기" },
-    ];
-    dispatch({ type: "SET_BUCKET", payload: data });
+    // 공백처리
+    if (content.trim() === "") {
+      alert("내용을 입력하세요.");
+      return;
+    }
+    const todo = {
+      type: "ADD_TODO",
+      payload: { content: content, isComplted: false },
+    };
+    dispatch(todo);
+    setContent("");
+  };
+  // 입력창 Enter 키 처리
+  const handleKeyPress = e => {
+    if (e.key === "Enter") {
+      handleClick();
+    }
   };
   return (
-    <BucketProvider>
-      <div>
-        <p>장바구니 목록 : {state.bucket[0].goodname}</p>
-        <button
-          onClick={() => {
-            handleClick();
-          }}
-        >
-          장바구니 업데이트
-        </button>
-      </div>
-    </BucketProvider>
+    <div>
+      <input
+        type="text"
+        value={content}
+        onKeyDown={e => {
+          handleKeyPress(e);
+        }}
+        onChange={e => {
+          setContent(e.target.value);
+        }}
+      />
+      <button
+        onClick={() => {
+          handleClick();
+        }}
+      >
+        할일 추가
+      </button>
+    </div>
   );
 };
 
-export default AppReducer;
+export default TodoAdd;
 ```
 
-## 2. ts 버전의 useReducer
+- /src/component/todo/TodoList.js
+  : Context 정보 보여주기 및 업데이트(Reduce 의 dispatch 적용)
 
-- /src/AppReducerTs.tsx
+```js
+import React, { useContext, useState } from "react";
+import {
+  TODO_ACTION_TYPE,
+  TodoContext,
+} from "../../context/TodoContextProvider";
 
-```ts
-import React, { MouseEvent, useContext } from "react";
-import BucketProviderTs, { BucketContext } from "./context/BucketProviderTs";
+const TodoList = () => {
+  // context 에 보관한 state 를 출력함.
+  // context 에 연결된  state 관리 Reducer 함수 를 호출함.
+  const { state, dispatch } = useContext(TodoContext);
 
-const AppReducerTs: React.FC = () => {
-  // const { state, dispatch } = useContext(BucketContext);
-  const context = useContext(BucketContext);
-  // 초기에 context 가 null 기본 값을 가짐.
-  if (!context) {
-    throw new Error("null 입니다.");
-  }
-  const { state, dispatch } = context;
+  // 현재 수정중인지 아닌지 에 대한 상태관리
+  // 몇 번 글이 수정 중인지 상태관리
+  const [editId, setEditId] = useState(null);
+  const [editContent, setEditContent] = useState("");
 
-  const handleClick = (e: MouseEvent<HTMLButtonElement>): void => {
-    const data = [
-      { pk: 1, goodname: "사과" },
-      { pk: 2, goodname: "딸기" },
-    ];
-    dispatch({ type: "SET_BUCKET", payload: data });
+  const handleClickDelete = uid => {
+    const obj = { type: TODO_ACTION_TYPE.DELETE_TODO, payload: { uid } };
+    dispatch(obj);
   };
-  return (
-    <BucketProviderTs>
-      <div>
-        <p>장바구니 목록 : {state.bucket[0].goodname}</p>
-        <button
-          onClick={e => {
-            handleClick(e);
-          }}
-        >
-          장바구니 업데이트
-        </button>
-      </div>
-    </BucketProviderTs>
-  );
-};
 
-export default AppReducerTs;
+  const handleClickModify = (uid, content) => {
+    setEditId(uid);
+    setEditContent(content);
+  };
 
-```
+  const handleKeyDown = e => {
+    if (e.key === "Enter") {
+      handleClickSave();
+    }
+  };
 
-- /src/context/BucketProviderTs.tsx
+  const handleClickSave = () => {
+    const obj = {
+      type: TODO_ACTION_TYPE.MODIFY_TODO,
+      payload: { uid: editId, content: editContent },
+    };
+    dispatch(obj);
+    // 원래 상태로 돌리기
+    setEditId(null);
+    setEditContent("");
+  };
 
-```tsx
-import React, { Dispatch, createContext, useEffect, useReducer } from "react";
-interface Item {
-  pk: number;
-  goodname: string;
-}
-interface State {
-  bucket: Item[];
-}
-const initialState: State = { bucket: [] };
+  const handleClickCancel = () => {
+    setEditId(null);
+    setEditContent("");
+  };
 
-interface BucketAction {
-  type: string;
-  payload: Item[];
-}
+  // Pagination 을 위한 코드처리
+  // 총 목록수는  state 에 저장되어 있음. (todos 배열.length)
+  // 한 화면 당 보여줄 목록 최대 개수
+  const todosPerPage = 5;
+  // 총 몇페이지 인가?
+  const totalPages = Math.ceil(state.length / todosPerPage);
 
-const bucketReducer = (state: State, action: BucketAction): State => {
-  switch (action.type) {
-    case "SET_BUCKET":
-      return { ...state, bucket: action.payload };
-    default:
-      return state;
+  // 화면에 보여줄 버튼 목록
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    pageNumbers.push(i);
   }
-};
+  // 실제 목록에서 원하는 부분부터 갯수 만큼 배열 만들기
+  // 보여줄 목록의 시작 번호
+  const [currentPage, setCurrentPage] = useState(1);
+  // 페이지 번호 를 이용한 시작 인덱스 처리
+  const indexStart = (currentPage - 1) * todosPerPage;
 
-interface BucketContextProps {
-  state: State;
-  dispatch: Dispatch<BucketAction>;
-}
-export const BucketContext = createContext<BucketContextProps | null>(null);
+  // const 현재목록배열 = 원본배열.slice(시작인덱스, 끝 범위 인덱스 이전까지);
+  const currentTodos = state.slice(indexStart, indexStart + todosPerPage);
 
-interface BucketProviderTsProps {
-  children: React.ReactNode;
-}
-const BucketProviderTs: React.FC<BucketProviderTsProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(bucketReducer, initialState);
+  // 화면에 페이지 버튼 목록을 출력하기 기능
+  // 예: pageNumbers = [1,2,3,4,5....]
+  const renderPageNumbers = pageNumbers.map((item, index) => (
+    <button
+      key={index}
+      onClick={() => {
+        setCurrentPage(item);
+      }}
+    >
+      {item}
+    </button>
+  ));
 
-  useEffect(() => {
-    dispatch({ type: "SET_BUCKET", payload: [] });
-  }, []);
+  // 이전 페이지 가기
+  const handleClickPrev = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+  // 다음 페이지 가기
+  const handleClickNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   return (
-    <BucketContext.Provider value={{ state, dispatch }}>
-      {children}
-    </BucketContext.Provider>
+    <div>
+      <h1>할일목록</h1>
+      {state.length === 0 ? (
+        <h2>목록이 없습니다.</h2>
+      ) : (
+        <>
+          <div>
+            {currentTodos.map((item, index) => (
+              <div key={index}>
+                {editId === item.uid ? (
+                  <div>
+                    <input
+                      type="text"
+                      value={editContent}
+                      onKeyDown={e => handleKeyDown(e)}
+                      onChange={e => setEditContent(e.target.value)}
+                    />
+                    <button
+                      onClick={() => {
+                        handleClickSave();
+                      }}
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleClickCancel();
+                      }}
+                    >
+                      취소
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <p>할일 번호(uid) : {item.uid}</p>
+                    <p>할일 내용: {item.content}</p>
+                    <button
+                      onClick={() => {
+                        handleClickModify(item.uid, item.content);
+                      }}
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleClickDelete(item.uid);
+                      }}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div>{renderPageNumbers}</div>
+          <div>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => {
+                handleClickPrev();
+              }}
+            >
+              이전페이지
+            </button>
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => {
+                handleClickNext();
+              }}
+            >
+              다음페이지
+            </button>
+          </div>
+          <div>
+            현재페이지 {currentPage} / 총페이지 {totalPages}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 
-export default BucketProviderTs;
+export default TodoList;
 ```
