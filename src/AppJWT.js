@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import jwtAxios from "./apis/jwtUtil";
+import jwtAxios from "./apis/jwtUtilTs";
 import axios from "axios";
 import { setCookie } from "./utils/cookie";
 
