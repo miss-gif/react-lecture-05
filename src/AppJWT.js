@@ -29,8 +29,8 @@ const AppJWT = () => {
   // jwt 인증 필요없는 api 호출
   const getGrapingList = async () => {
     const res = await axios.get("/api/main");
-    console.log("글래핑 리스트 호출");
-    console.log(res.data);
+    // console.log("글래핑 리스트 호출");
+    // console.log(res.data);
   };
 
   useEffect(() => {
