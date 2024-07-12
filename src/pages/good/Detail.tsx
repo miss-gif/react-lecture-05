@@ -1,6 +1,10 @@
 import { useParams } from "react-router-dom";
 
-const Deatil = () => {
+interface DeatilProps {
+  title: string;
+}
+
+const Deatil: React.FC<DeatilProps> = ({ title }) => {
   // js 자리
   // path 로 전달된 prams 출력해 보기
   // 예) /compnay/사과

@@ -12,16 +12,17 @@ import History from "./pages/company/History";
 import Partner from "./pages/company/Partner";
 import Good from "./pages/good/Good";
 import { useState } from "react";
+import { IArr } from "./types/datatype";
 
-function App() {
+function App(): JSX.Element {
   // 복잡한 데이터
-  const arr = [
+  const arr: IArr[] = [
     { name: "삼성전자", link: "http://" },
     { name: "LG전자", link: "http://" },
     { name: "그린컴퓨터", link: "http://" },
   ];
   // 로그인 안된 경우
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState<boolean>(true);
 
   return (
     <BrowserRouter>

@@ -1,6 +1,6 @@
 import { useLocation, useSearchParams } from "react-router-dom";
 
-const Ceo = () => {
+const Ceo: React.FC = () => {
   // 현재 주소 및 패스 알아내기
   const location = useLocation();
   console.log(location);
@@ -9,7 +9,7 @@ const Ceo = () => {
   console.log(location.state?.fromUrl);
 
   // JS 자리
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   // company/ceo?name=홍길동&age=30
   const name = searchParams.get("name");
   const age = searchParams.get("age");
