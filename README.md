@@ -4,14 +4,14 @@
 - URI 구성
   : Protocol (http, https, ftp, smtp)
   : URL (도메인)
-  : Port (3000 번 리액트, 3306 번 데이터베이스, 8080 번 웹서버)
+  : Port (3000 번 리액트 테스트용, 3306 번 데이터베이스, 8080 번 웹서버)
   : Path (파일의 경로)
   : Query String (?쿼리명=값&쿼리명=값)
 - 예) http://localhost:3000/todo/login?id=hong&pass=1234
 
 ## 1.라우터를 먼저 고려해야함.
 
-- 일반적으로 웹서비스 기획이후에 화면구성을 도출
+- 일반적으로 웹서비스 기획 이후에 화면구성을 도출
 - 화면구성에 맞게 화면흐름이 정의
 - 화면흐름에 맞는 경로를 작성
 
@@ -805,10 +805,10 @@ const Partner = ({ pc }) => {
 export default Partner;
 ```
 
-#### 4.14.3. outlet 이해하기
+#### 4.14.3. Outlet 이해하기
 
 - Router 를 이용해서 컴포넌트의 레이아웃을 유지하고
-- Router 의 outlet 장소에 패스에 따라 컴포넌트 출력
+- Router 의 Outlet 장소에 패스에 따라 컴포넌트 출력
 
 ```js
 <Route path="/good" element={<Good></Good>}>
@@ -955,6 +955,7 @@ console.log(location.state);
 ```
 
 - 아래의 내용을 아시면 참 좋겠어요.
+  : 아무도 모르게 내용을 전달하고 싶은 경우 즉, url 에 안보임.
 
 ```js
 const specialNavi = () => {
@@ -990,6 +991,7 @@ console.log(location.state?.fromUrl);
 ### 4.16. NavLink 이해하기
 
 - 현재 라우터의 path 에 맞게 css 적용해줌.
+  : 현재 활성화된 즉, 웹브라우저에 명시된 path 경로와 같은 경우 active 됨
 - /src/components/layout/Header.js
   : `import { NavLink } from "react-router-dom";`
 
