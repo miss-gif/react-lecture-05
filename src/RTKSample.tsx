@@ -9,16 +9,18 @@ import {
   userlogin,
 } from "./slices/userSlice";
 import { postLogin } from "./apis/memberapi/memberapi";
+import { AppDispatch, RootState } from "./store";
 
-const RTKSample = () => {
+const RTKSample: React.FC = () => {
   // slice 정보 가져오기
-  const themeState = useSelector(state => state.themeSlice);
+  const themeState = useSelector((state: RootState) => state.themeSlice);
   //console.log(themeState); // {theme:"black"}
   // const colorObj = {
   //   color: themeState.theme,
   // };
-  const langState = useSelector(state => state.langSlice);
-  const dispatch = useDispatch();
+  const langState = useSelector((state: RootState) => state.langSlice);
+  // store 에서 정의한 action 즉, RootState 업데이트 함수
+  const dispatch = useDispatch<AppDispatch>();
   const handleClickKR = () => {
     dispatch(changeKor());
   };
@@ -30,17 +32,17 @@ const RTKSample = () => {
   };
 
   // 사용자 정보
-  const userState = useSelector(state => state.userSlice);
+  const userState = useSelector((state: RootState) => state.userSlice);
   console.log("사용자 정보 : ", userState);
   // 정보 호출
   const handleClickUser = async () => {
     // 일반적 reducer 함수 호출
     // dispatch(showUser());
     // 비동기 extraReducer 호출
-    // dispatch(getUserAsyncThunk());
-    // dispatch(postLoginAsyncThunk());
-    const result = await postLogin();
-    dispatch(userlogin(result));
+    dispatch(getUserAsyncThunk());
+    //dispatch(postLoginAsyncThunk());
+    // const result = await postLogin();
+    // dispatch(userlogin(result));
   };
 
   return (
@@ -60,7 +62,7 @@ const RTKSample = () => {
           {userState.id}
           {userState.userId}
           {userState.title}
-          {userState.complted}
+          {userState.completed}
         </div>
       ) : (
         <div>사용자정보가 없어요.</div>
