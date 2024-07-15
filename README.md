@@ -330,6 +330,9 @@ export const linedata: Series[] = [
 
 ## 2. Chart.tsx
 
+- Animated 오류 메세지 제거
+  : `animate={false}` 옵션 적용
+
 ```tsx
 import React from "react";
 import { ResponsiveLine } from "@nivo/line";
@@ -382,6 +385,7 @@ const Chart: React.FC = () => {
           pointLabel="data.yFormatted"
           pointLabelYOffset={-12}
           areaOpacity={0}
+          isInteractive={false}
           enableTouchCrosshair={true}
           useMesh={true}
           legends={[
@@ -410,6 +414,7 @@ const Chart: React.FC = () => {
               ],
             },
           ]}
+          animate={false}
         />
       </div>
     </div>

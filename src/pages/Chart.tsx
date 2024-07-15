@@ -78,6 +78,7 @@ const Chart: React.FC = () => {
               ],
             },
           ]}
+          animate={false}
         />
       </div>
     </div>
