@@ -1,32 +1,15 @@
-import { RouterProvider } from "react-router-dom";
-import "./App.css";
-import Footer from "./components/layout/Footer";
-import Header from "./components/layout/Header";
+import React from "react";
+import Counter from "./pages/Counter";
+import LoginForm from "./pages/LoginForm";
 
-// Index 라는 이름 충돌로 변경함
-import { useState } from "react";
-import router from "./router/root";
-
-function App() {
-  // 복잡한 데이터
-  const arr = [
-    { name: "삼성전자", link: "http://" },
-    { name: "LG전자", link: "http://" },
-    { name: "그린컴퓨터", link: "http://" },
-  ];
-  // 로그인 안된 경우
-  const [isLogin, setIsLogin] = useState(true);
-
+const App = () => {
   return (
-    <>
-      {/* 공통레이아웃 적용 */}
-      <div className="wrap">
-        <RouterProvider router={router} />
-
-        <Footer></Footer>
-      </div>
-    </>
+    <div>
+      <h1> APP 컴포넌트</h1>
+      <Counter />
+      <LoginForm />
+    </div>
   );
-}
+};
 
 export default App;
