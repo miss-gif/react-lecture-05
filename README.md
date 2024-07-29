@@ -6,6 +6,8 @@
 ## 1. React Hook Form 기본활용
 
 - 리랜더링을 최소화 함.
+  : 대량의 text 및 input 요소 사용시 화면 떨림 발생
+  : 퍼포먼스 이슈가 발생하는 부분을 개선
 - /src/pages/Join.js
 
 ```js
@@ -35,7 +37,6 @@ const Join = () => {
   } = useForm({ defaultValues: initState });
 
   //   전화번호 자동 변경
-  //   전화번호 자동 변경
   const handleChangePhone = e => {
     const phoneNumber = formatPhoneNumber(e.target.value);
     console.log(phoneNumber);
@@ -52,6 +53,7 @@ const Join = () => {
     return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
   };
 
+  // 폼의 값
   const onSubmit = data => {
     console.log("전송시 데이터 ", data);
     const sendData = { ...data, phone: data.phone.replaceAll("-", "") };
@@ -157,3 +159,53 @@ export default Join;
 ## 2.3. 적용 단계
 
 - yup schema 셋팅
+
+```js
+// yup schema 셋팅
+const schema = yup.object().shape({
+  userid: yup.string().required("아이디는 필수 입니다."),
+  email: yup
+    .string()
+    .required("이메일은 필수 항목입니다.")
+    .email("유효한 이메일 주소를 입력하세요."),
+  pass: yup
+    .string()
+    .required("비밀번호를 입력해주세요")
+    .min(8, "비밀번호는 최소 8자입니다.")
+    .max(16, "비밀번호는 최대 16자입니다"),
+  phone: yup
+    .string()
+    .required("전화번호를 입력해주세요")
+    .matches(/^[0-9]{3}-[0-9]{3,4}-[0-9]{4}$/, "유효한 전화번로를 입력하세요."),
+  address1: yup.string().required("우편번호를 입력해주세요"),
+});
+```
+
+- yup schema 적용
+
+```js
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+```
+
+```js
+const {
+  register,
+  handleSubmit,
+  setValue,
+  formState: { errors },
+} = useForm({
+  defaultValues: initState,
+  resolver: yupResolver(schema),
+  mode: "onChange",
+});
+```
+
+- 기본 에러 메세지 제거
+
+```js
+<input type="text" {...register("userid")} />;
+{
+  errors.userid && <span>{errors.userid.message}</span>;
+}
+```

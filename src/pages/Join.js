@@ -42,9 +42,12 @@ const Join = () => {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm({ defaultValues: initState, resolver: yupResolver(schema) });
+  } = useForm({
+    defaultValues: initState,
+    resolver: yupResolver(schema),
+    mode: "onChange",
+  });
 
-  //   전화번호 자동 변경
   //   전화번호 자동 변경
   const handleChangePhone = e => {
     const phoneNumber = formatPhoneNumber(e.target.value);
