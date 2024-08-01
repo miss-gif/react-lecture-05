@@ -1,7 +1,7 @@
-import "./App.css";
+import JoinForm from "./pages/JoinForm";
 
-function App() {
-  return <>안녕하세요.</>;
-}
+const App = () => {
+  return <JoinForm />;
+};
 
 export default App;
