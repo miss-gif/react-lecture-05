@@ -1,10 +1,9 @@
-import React from "react";
-import AniPage from "./pages/AniPage";
+import UseMemoPage from "./pages/UseMemoPage";
 
 const App = () => {
   return (
     <div>
-      <AniPage />
+      <UseMemoPage />
     </div>
   );
 };
