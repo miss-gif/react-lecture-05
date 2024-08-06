@@ -1,6 +1,18 @@
 import React, { useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { doc, setDoc } from "firebase/firestore";
+
+import { auth, storage, db } from "../firebaseConfig";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  // 패스이동하기
+  const navigate = useNavigate();
   // 현재 화면 상태 관리
   const [isScene, setIsScene] = useState("login");
   // 입력 항목 상태관리
@@ -44,7 +56,32 @@ const Login = () => {
       return;
     }
     console.log("FB 로그인 시도 처리");
+    fbLogin();
   };
+
+  const fbLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, pw);
+      navigate("/todo");
+    } catch (error) {
+      console.log("error.code ", error.code);
+      console.log("error.message ", error.message);
+      switch (error.code) {
+        case "auth/user-not-found":
+          setError("사용자를 찾을 수 없습니다.");
+          break;
+        case "auth/wrong-password":
+          setError("비밀번호가 틀렸습니다.");
+          break;
+        case "auth/invalid-email":
+          setError("유효하지 않은 이메일 주소입니다.");
+          break;
+        default:
+          setError("로그인에 실패했습니다. 다시 시도해주세요.");
+      }
+    }
+  };
+
   // 회원가입시 처리
   const handleJoin = () => {
     if (!name) {
@@ -60,14 +97,66 @@ const Login = () => {
       return;
     }
     console.log("FB 회원정보 등록 시도 처리");
-    setError("");
-    setName("");
-    setEmail("");
-    setPw("");
-    setPreviewImage(null);
-    setImage(null);
-    setIsScene("login");
+
+    fbJoin();
   };
+
+  const fbJoin = async () => {
+    try {
+      // 인증기능과, 이메일, 비밀번호를 통해서 사용자 추가 API 실행
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        pw,
+      );
+      const user = userCredential.user;
+      // console.log(userCredential);
+      // storage : 이미지 파일 업로드
+      let imageUrl = "";
+      // 사용자가 이미지를 업로드 한다면
+      if (image) {
+        // users폴더 / 사용자폴더 / profile.png
+        const imageRef = ref(storage, `users/${user.uid}/profile.png`);
+        await uploadBytes(imageRef, image);
+        imageUrl = await getDownloadURL(imageRef);
+        console.log("업로드된 이미지의 경로 ", imageUrl);
+      }
+      // database : 사용자 이름 추가
+      const userDoc = doc(db, "users", user.uid);
+      await setDoc(userDoc, { name, email, imageUrl });
+      // 사용자 등록을 하면 즉시 FB 는 로그인 상태로 처리 중.
+      // 강제로 로그아웃을 시킨다.
+      await signOut(auth);
+
+      setError("");
+      setName("");
+      setEmail("");
+      setPw("");
+      setPreviewImage(null);
+      setImage(null);
+      setIsScene("login");
+    } catch (error) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      console.log("errorCode : ", errorCode);
+      console.log("errorMessage : ", errorMessage);
+      switch (errorCode) {
+        case "auth/invalid-email":
+          setError("이메일을 바르게 입력해주세요.");
+          break;
+        case "auth/weak-password":
+          setError("비밀번호가 너무 쉬워요.");
+          break;
+        case "auth/email-already-in-use":
+          setError("등록된 이메일 입니다.");
+          break;
+        default:
+          alert("회원가입 실패");
+          break;
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">
