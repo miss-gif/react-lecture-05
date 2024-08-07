@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import EditProfile from "./components/EditProfile";
 import Login from "./components/Login";
 import Navbar from "./components/Navbar";
@@ -6,9 +6,11 @@ import Profile from "./components/Profile";
 import Todo from "./components/Todo";
 import useAuth from "./hooks/useAuth";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useEffect } from "react";
 
 const App = () => {
   const { user } = useAuth();
+
   return (
     <BrowserRouter>
       {user && <Navbar />}

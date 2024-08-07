@@ -19,7 +19,9 @@ const Login = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
+  // Storage 보관용 원본 파일
   const [image, setImage] = useState(null);
+  // 사용자 이미지 미리보기
   const [previewImage, setPreviewImage] = useState(null);
   // 입력 에러 상태관리
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ const Login = () => {
     // input type="file"
     const file = e.target.files[0];
     if (file) {
-      // file 원본을 보관한다.
+      // storage 업로드 할 file 원본을 보관한다.
       setImage(file);
       // file 을 미리보기로 만든다.
       // FileReader 사용해 보기 (Blob 처리)
@@ -40,12 +42,14 @@ const Login = () => {
       reader.readAsDataURL(file);
     }
   };
-  // 로그인 시도시 처리
+  // 키보드로 로그인 시도시 처리
   const handleKeyPress = e => {
     if (e.code === "Enter") {
       handleAuth();
     }
   };
+
+  // 실제로 FB 는 이메일 기준
   const handleAuth = () => {
     if (!email) {
       setError("이메일을 입력하세요.");
@@ -55,17 +59,18 @@ const Login = () => {
       setError("비밀번호를 입력하세요.");
       return;
     }
-    console.log("FB 로그인 시도 처리");
+    // console.log("FB 로그인 시도 처리");
     fbLogin();
   };
 
   const fbLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, pw);
+      // 추후 useAuth 의 user 항목을 true 코드 위치;
       navigate("/todo");
     } catch (error) {
-      console.log("error.code ", error.code);
-      console.log("error.message ", error.message);
+      // console.log("error.code ", error.code);
+      // console.log("error.message ", error.message);
       switch (error.code) {
         case "auth/user-not-found":
           setError("사용자를 찾을 수 없습니다.");
@@ -96,7 +101,9 @@ const Login = () => {
       setError("비밀번호를 입력하세요.");
       return;
     }
-    console.log("FB 회원정보 등록 시도 처리");
+    // 사용자 이미지 파일은 체크 하지 않았어요.
+    // 만약, 이미지 업로드 안한 경우는 기본형 이미지 제공 예정
+    // console.log("FB 회원정보 등록 시도 처리");
 
     fbJoin();
   };
@@ -115,17 +122,19 @@ const Login = () => {
       let imageUrl = "";
       // 사용자가 이미지를 업로드 한다면
       if (image) {
+        // Storage 에 보관
         // users폴더 / 사용자폴더 / profile.png
         const imageRef = ref(storage, `users/${user.uid}/profile.png`);
         await uploadBytes(imageRef, image);
+        // db 에 저장하려고 파일의 URL 파악한다.
         imageUrl = await getDownloadURL(imageRef);
-        console.log("업로드된 이미지의 경로 ", imageUrl);
+        // console.log("업로드된 이미지의 경로 ", imageUrl);
       }
-      // database : 사용자 이름 추가
+      // database : 사용자 닉네임, 이메일, 사용자 이미지 URL 추가
       const userDoc = doc(db, "users", user.uid);
       await setDoc(userDoc, { name, email, imageUrl });
-      // 사용자 등록을 하면 즉시 FB 는 로그인 상태로 처리 중.
-      // 강제로 로그아웃을 시킨다.
+      // 사용자 등록을 하면 즉시 FB 는 로그인 상태로 처리.
+      // UI 와 흐름이 맞지 않으므로 강제로 로그아웃을 시킨다.
       await signOut(auth);
 
       setError("");
@@ -134,12 +143,13 @@ const Login = () => {
       setPw("");
       setPreviewImage(null);
       setImage(null);
+      // 로그인 화면으로 이동시킨다.
       setIsScene("login");
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
-      console.log("errorCode : ", errorCode);
-      console.log("errorMessage : ", errorMessage);
+      // console.log("errorCode : ", errorCode);
+      // console.log("errorMessage : ", errorMessage);
       switch (errorCode) {
         case "auth/invalid-email":
           setError("이메일을 바르게 입력해주세요.");
