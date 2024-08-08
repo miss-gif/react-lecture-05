@@ -6,22 +6,20 @@ import { signOut } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 
 const Navbar = () => {
-  const { user, setUser, userData, setUserData, setUserCurrent } = useAuth();
+  const { user, setUser, userData, setUserData } = useAuth();
   const navigate = useNavigate();
   const handleLogout = async () => {
     // FB 에서 로그아웃
     await signOut(auth);
     setUserData(null);
     setUser(false);
-    setUserCurrent(null);
     // 로그인으로 이동
     navigate("/");
   };
-  // 사용자 로그인 안했다면 Navbar 출력하지 않는다.
+  // 사용자가 로그인을 안 했다면 Navbar 출력하지 않는다.
   if (!user) {
     return null;
   }
-
   return (
     <nav className="bg-gray-400 p-4">
       <ul className="flex justify-around items-center">
@@ -43,11 +41,10 @@ const Navbar = () => {
                   className="w-8 h-8 rounded-full mr-2"
                 />
               ) : (
-                <FaUserCircle className="w-8 h-8 text-gray-500 mr-2" />
+                <FaUserCircle className="w-8 h-8 text-gray-200 mr-2" />
               )}
               {userData.name} {userData.email}
             </Link>
-
             <button
               onClick={() => {
                 handleLogout();

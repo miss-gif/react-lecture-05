@@ -1,11 +1,11 @@
 # FB 회원기능
 
-## 1. FB 셋팅
+## 1. FB 세팅
 
 - [참조문서](https://firebase.google.com/docs?hl=ko)
-- Authentication 기능활성
-- Storage 기능활성
-- Fire Store 기능활성
+- Authentication 기능 활성
+- Storage 기능 활성
+- Fire Store 기능 활성
 - Hosting 기능 활성
 
 ## 2. 커스텀 훅
@@ -19,10 +19,9 @@ import { auth, storage, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
 const useAuth = () => {
-  // 사용자 있냐 없냐
+  // 사용자 유무
   const [user, setUser] = useState(false);
-  // 사용자 정보를 저장함.
-  // Navbar 또는 Profile, EditProfile 에 출력할 내용
+  // 사용자 정보를 저장함
   const [userData, setUserData] = useState(null);
 
   // 사용자 정보를 읽어들임
@@ -32,7 +31,6 @@ const useAuth = () => {
     }
     // 문서를 만든다.
     const userInfoGetDoc = doc(db, "users", who.uid);
-    // 문서의 내용을 Get 하는 방식
     const docSnap = await getDoc(userInfoGetDoc);
     // 위의 구문을 실행후 문서가 존재한다면 실행하라.
     if (docSnap.exists()) {
@@ -46,7 +44,7 @@ const useAuth = () => {
 
   // FB 는 로그인 시도를 하면 사용자의 로그인 상태를 실시간으로 변경
   useEffect(() => {
-    // FB 연결하면 사용자의 인증 즉, 로그인, 회원가입, 로그안 실행
+    // FB 연결하면 사용자의 인증 즉, 로그인, 회원가입, 로그인 실행
     // 자동으로 onAuthStateChanged 가 실행된다.
     const onAuth = onAuthStateChanged(auth, async who => {
       if (who) {
@@ -126,7 +124,7 @@ const App = () => {
 export default App;
 ```
 
-## 3. /src/components/App.js
+## 4. /src/components/ProtectedRoute.js
 
 ```js
 import { Navigate } from "react-router-dom";
@@ -140,7 +138,7 @@ const ProtectedRoute = ({ children }) => {
 export default ProtectedRoute;
 ```
 
-## 4. /src/components/Login.js
+## 5. /src/components/Login.js
 
 - 회원가입
 - 파일저장
@@ -185,7 +183,7 @@ const Login = () => {
       // FileReader 사용해 보기 (Blob 처리)
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log(reader);
+        // console.log(reader);
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
@@ -208,7 +206,7 @@ const Login = () => {
       setError("비밀번호를 입력하세요.");
       return;
     }
-    // console.log("FB 로그인 시도 처리");
+    console.log("FB 로그인 시도 처리");
     fbLogin();
   };
 
@@ -252,7 +250,7 @@ const Login = () => {
     }
     // 사용자 이미지 파일은 체크 하지 않았어요.
     // 만약, 이미지 업로드 안한 경우는 기본형 이미지 제공 예정
-    // console.log("FB 회원정보 등록 시도 처리");
+    console.log("FB 회원정보 등록 시도 처리");
 
     fbJoin();
   };
@@ -277,7 +275,7 @@ const Login = () => {
         await uploadBytes(imageRef, image);
         // db 에 저장하려고 파일의 URL 파악한다.
         imageUrl = await getDownloadURL(imageRef);
-        // console.log("업로드된 이미지의 경로 ", imageUrl);
+        console.log("업로드된 이미지의 경로 ", imageUrl);
       }
       // database : 사용자 닉네임, 이메일, 사용자 이미지 URL 추가
       const userDoc = doc(db, "users", user.uid);
@@ -297,8 +295,8 @@ const Login = () => {
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
-      // console.log("errorCode : ", errorCode);
-      // console.log("errorMessage : ", errorMessage);
+      console.log("errorCode : ", errorCode);
+      console.log("errorMessage : ", errorMessage);
       switch (errorCode) {
         case "auth/invalid-email":
           setError("이메일을 바르게 입력해주세요.");
@@ -465,9 +463,7 @@ const Login = () => {
 export default Login;
 ```
 
-## 5. /src/components/Navbar.js
-
-- 로그아웃
+## 6. /src/components/Lavbar.js
 
 ```js
 import React from "react";
@@ -488,7 +484,7 @@ const Navbar = () => {
     // 로그인으로 이동
     navigate("/");
   };
-  // 사용자 로그인 안했다면 Navbar 출력하지 않는다.
+  // 사용자가 로그인을 안 했다면 Navbar 출력하지 않는다.
   if (!user) {
     return null;
   }
@@ -513,11 +509,10 @@ const Navbar = () => {
                   className="w-8 h-8 rounded-full mr-2"
                 />
               ) : (
-                <FaUserCircle className="w-8 h-8 text-gray-500 mr-2" />
+                <FaUserCircle className="w-8 h-8 text-gray-200 mr-2" />
               )}
               {userData.name} {userData.email}
             </Link>
-
             <button
               onClick={() => {
                 handleLogout();
@@ -536,23 +531,22 @@ const Navbar = () => {
 export default Navbar;
 ```
 
-## 6. /src/components/Profile.js
+## 7. /src/components/Profile.js
 
-- 회원탈퇴(사용자삭제, 이미지삭제, db 삭제, 상태업데이트)
+- 회원탈퇴(사용자 삭제, 이미지 삭제, DB 삭제)
 
 ```js
 import React from "react";
-import useAuth from "../hooks/useAuth";
 import { FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { db, storage } from "../firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import { deleteUser } from "firebase/auth";
+import useAuth from "../hooks/useAuth";
 
 const Profile = () => {
   const userObject = useAuth();
-
   const navigate = useNavigate();
   const handleClickEdit = () => {
     navigate("/edit-profile");
@@ -560,9 +554,9 @@ const Profile = () => {
   const handleClickDeleteUser = async () => {
     // console.log(userObject.userCurrent);
 
-    // 탈퇴여부 확인
+    // 탈퇴 여부 확인
     const flag = window.confirm(
-      "정말로 회원탈퇴 하시겠습니까? \n이 작업은 되돌리수 없습니다.",
+      "정말 탈퇴 하시겠습니까? \n이 작업은 되돌릴 수 없습니다.",
     );
 
     if (flag) {
@@ -590,6 +584,7 @@ const Profile = () => {
       }
     }
   };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">프로필</h1>
@@ -602,10 +597,10 @@ const Profile = () => {
               className="w-32 h-32 rounded-full mr-2"
             />
           ) : (
-            <FaUserCircle className="w-32 h-32 text-gray-500 mr-2" />
+            <FaUserCircle className="w-32 h-32 text-gray-400 mr-2" />
           )}
-          <p className="text-lg mb-2">이름: {userObject.userData.name}</p>
-          <p className="text-lg mb-4">이메일: {userObject.userData.email}</p>
+          <p className="text-lg mb-2">이름 : {userObject.userData.name}</p>
+          <p className="text-lg mb-4">이메일 : {userObject.userData.email}</p>
           <div className="flex space-x-4">
             <button
               onClick={() => {
@@ -633,7 +628,7 @@ const Profile = () => {
 export default Profile;
 ```
 
-## 7. /src/components/EditProfile.js
+## 8. /src/components/EditProfile.js
 
 - 이름 수정
 - 비밀번호 수정

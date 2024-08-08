@@ -6,9 +6,9 @@ import { doc, getDoc } from "firebase/firestore";
 const useAuth = () => {
   // FB 사용자 인증 정보
   const [userCurrent, setUserCurrent] = useState(null);
-  // 사용자 있냐 없냐
+  // 사용자 유무
   const [user, setUser] = useState(false);
-  // 사용자 정보를 저장함.
+  // 사용자 정보를 저장함
   // Navbar 또는 Profile, EditProfile 에 출력할 내용
   const [userData, setUserData] = useState(null);
 
@@ -19,7 +19,6 @@ const useAuth = () => {
     }
     // 문서를 만든다.
     const userInfoGetDoc = doc(db, "users", who.uid);
-    // 문서의 내용을 Get 하는 방식
     const docSnap = await getDoc(userInfoGetDoc);
     // 위의 구문을 실행후 문서가 존재한다면 실행하라.
     if (docSnap.exists()) {
@@ -33,11 +32,11 @@ const useAuth = () => {
 
   // FB 는 로그인 시도를 하면 사용자의 로그인 상태를 실시간으로 변경
   useEffect(() => {
-    // FB 연결하면 사용자의 인증 즉, 로그인, 회원가입, 로그안 실행
+    // FB 연결하면 사용자의 인증 즉, 로그인, 회원가입, 로그인 실행
     // 자동으로 onAuthStateChanged 가 실행된다.
     const onAuth = onAuthStateChanged(auth, async who => {
       if (who) {
-        // who 가 currentUser 임,
+        // who 가 currentUser 이다.
         setUserCurrent(who);
 
         // const uid = who.uid;

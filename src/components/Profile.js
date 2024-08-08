@@ -1,15 +1,14 @@
 import React from "react";
-import useAuth from "../hooks/useAuth";
 import { FaUserCircle } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { db, storage } from "../firebaseConfig";
 import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
 import { deleteUser } from "firebase/auth";
+import useAuth from "../hooks/useAuth";
 
 const Profile = () => {
   const userObject = useAuth();
-
   const navigate = useNavigate();
   const handleClickEdit = () => {
     navigate("/edit-profile");
@@ -17,9 +16,9 @@ const Profile = () => {
   const handleClickDeleteUser = async () => {
     // console.log(userObject.userCurrent);
 
-    // 탈퇴여부 확인
+    // 탈퇴 여부 확인
     const flag = window.confirm(
-      "정말로 회원탈퇴 하시겠습니까? \n이 작업은 되돌리수 없습니다.",
+      "정말 탈퇴 하시겠습니까? \n이 작업은 되돌릴 수 없습니다.",
     );
 
     if (flag) {
@@ -47,6 +46,7 @@ const Profile = () => {
       }
     }
   };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">프로필</h1>
@@ -59,10 +59,10 @@ const Profile = () => {
               className="w-32 h-32 rounded-full mr-2"
             />
           ) : (
-            <FaUserCircle className="w-32 h-32 text-gray-500 mr-2" />
+            <FaUserCircle className="w-32 h-32 text-gray-400 mr-2" />
           )}
-          <p className="text-lg mb-2">이름: {userObject.userData.name}</p>
-          <p className="text-lg mb-4">이메일: {userObject.userData.email}</p>
+          <p className="text-lg mb-2">이름 : {userObject.userData.name}</p>
+          <p className="text-lg mb-4">이메일 : {userObject.userData.email}</p>
           <div className="flex space-x-4">
             <button
               onClick={() => {

@@ -36,7 +36,7 @@ const Login = () => {
       // FileReader 사용해 보기 (Blob 처리)
       const reader = new FileReader();
       reader.onloadend = () => {
-        console.log(reader);
+        // console.log(reader);
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
@@ -59,7 +59,7 @@ const Login = () => {
       setError("비밀번호를 입력하세요.");
       return;
     }
-    // console.log("FB 로그인 시도 처리");
+    console.log("FB 로그인 시도 처리");
     fbLogin();
   };
 
@@ -103,7 +103,7 @@ const Login = () => {
     }
     // 사용자 이미지 파일은 체크 하지 않았어요.
     // 만약, 이미지 업로드 안한 경우는 기본형 이미지 제공 예정
-    // console.log("FB 회원정보 등록 시도 처리");
+    console.log("FB 회원정보 등록 시도 처리");
 
     fbJoin();
   };
@@ -128,7 +128,7 @@ const Login = () => {
         await uploadBytes(imageRef, image);
         // db 에 저장하려고 파일의 URL 파악한다.
         imageUrl = await getDownloadURL(imageRef);
-        // console.log("업로드된 이미지의 경로 ", imageUrl);
+        console.log("업로드된 이미지의 경로 ", imageUrl);
       }
       // database : 사용자 닉네임, 이메일, 사용자 이미지 URL 추가
       const userDoc = doc(db, "users", user.uid);
@@ -148,8 +148,8 @@ const Login = () => {
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
-      // console.log("errorCode : ", errorCode);
-      // console.log("errorMessage : ", errorMessage);
+      console.log("errorCode : ", errorCode);
+      console.log("errorMessage : ", errorMessage);
       switch (errorCode) {
         case "auth/invalid-email":
           setError("이메일을 바르게 입력해주세요.");
