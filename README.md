@@ -1,52 +1,63 @@
-# FB 인증 디버깅
+# Recoil 적용
 
-## 1. index.js 파일의 수정사항
+- `npm install recoil`
 
-- 왜 BrowserRouter 가 index 로 이동을 한 것은?
-  : App.js 에서 인증이 안된경우와 인증이 된 경우 useNavigate() 를 활용
-  : path 를 이동시키려고
-  : React-Router-Dom 의 기능을 쓰려면 BrowserRouter 안쪽에 코딩이 되어야 함.
+## 1. RecoilRoot 적용
+
+- index.js
 
 ```js
-.......
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+import { BrowserRouter } from "react-router-dom";
+import { RecoilRoot } from "recoil";
+// js 버전
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
 root.render(
   <BrowserRouter>
-    <App />
+    <RecoilRoot>
+      <App />
+    </RecoilRoot>
   </BrowserRouter>,
 );
 ```
 
-## 2. hooks/useAuth.js
+## 2. atom 들을 생성
 
-- user 는 조금 불명확하다.
-  : 강제로 true, false 라고 개발자가 셋팅했었음.
-  : 명확하게 FB 의 auth.currentUser 정보가 좀 더 정확하다.
-  : auth.currentUser 는 인증상태, uid 도 존재함.
-  : 이러한 제거함.
+- /src/atoms/userAtom.js 생성
 
-- userCurrent 를 생성함.
-  : auth.currentUser 를 useState 로 보관함.
+```js
+import { atom } from "recoil";
 
-- 해당 파일의 state 들은 Recoil 에서 변경 예정
+// 사용자의 DB 상에 저장된 정보
+// {email:"", name:"", imageUrl:"http~"}
+export const recoil_UserData = atom({
+  key: "userDataState",
+  default: null,
+});
+```
 
-- onAuthStateChanged 는 FB 에서 소켓으로 실시간 인증 상태를 체크 해줌.
+## 3. atom 활용
+
+- /hooks/useAuth.js
 
 ```js
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, storage, db } from "../firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
+import { useRecoilState } from "recoil";
+import { recoil_UserCurrent, recoil_UserData } from "../atoms/userAtom";
 
 const useAuth = () => {
   // FB 사용자 인증 정보
   const [userCurrent, setUserCurrent] = useState(null);
-
-  // 사용자 유무
-  // const [user, setUser] = useState(false);
-
   // 사용자 정보를 저장함
-  // Navbar 또는 Profile, EditProfile 에 출력할 내용
-  const [userData, setUserData] = useState(null);
+  // const [userData, setUserData] = useState(null);
+  // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
 
   // 사용자 정보를 읽어들임
   const fetchUserData = async who => {
@@ -60,7 +71,8 @@ const useAuth = () => {
     // 위의 구문을 실행후 문서가 존재한다면 실행하라.
     if (docSnap.exists()) {
       // {name:"홍길동", email:"a@a.net", imageUrl: "~~~"}
-      setUserData(docSnap.data());
+      // setUserData(docSnap.data());
+      setRUserData(docSnap.data());
     } else {
       // docSnap.data() will be undefined in this case
       console.log("No such document!");
@@ -72,7 +84,7 @@ const useAuth = () => {
     // FB 연결하면 사용자의 인증 즉, 로그인, 회원가입, 로그인 실행
     // 자동으로 onAuthStateChanged 가 실행된다.
     const onAuth = onAuthStateChanged(auth, async who => {
-      console.log("인증 실시간 결과 알려줌. onAuthStateChanged ", who);
+      //console.log("인증 실시간 결과 알려줌. onAuthStateChanged ", who);
 
       if (who) {
         // console.log(who);
@@ -80,18 +92,16 @@ const useAuth = () => {
         // who == auth.currentUser 이다.
         setUserCurrent(who);
 
+        // 이놈이 문제 입니다.
+        // (Firebase Auth 관련 문제로 보여짐)
+        // setRUserCurrent(who);
         // const uid = who.uid;
-        // console.log("사용자 상태가 바뀜 uid : ", uid);
-        // 로그인에 의해 리턴된 모든 정보를 보관해 둔다.
-        // console.log("사용자 정보 : ", who);
-        // 로그인했으므로 true
-        // setUser(true);
         // DataBase 에 진입해서 사용자 정보관련 내용을 읽어들인다.
         await fetchUserData(who);
       } else {
         // 로그아웃 실시간 처리
-        setUserData(null);
-        // setUser(false);
+        // setUserData(null);
+        setRUserData(null);
         setUserCurrent(null);
       }
     });
@@ -101,10 +111,8 @@ const useAuth = () => {
   }, []);
 
   return {
-    // user,
-    // setUser,
-    userData,
-    setUserData,
+    // userData,
+    // setUserData,
     userCurrent,
     setUserCurrent,
   };
@@ -112,26 +120,107 @@ const useAuth = () => {
 export default useAuth;
 ```
 
-## 3. 기타파일
+## 4. 적용
 
-- Login.js
+- /src/App.js
 
 ```js
-import React, { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "./atoms/userAtom";
+import EditProfile from "./components/EditProfile";
+import Login from "./components/Login";
+import Navbar from "./components/Navbar";
+import Profile from "./components/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Todo from "./components/Todo";
+
+const App = () => {
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
+  return (
+    <>
+      {rUserData ? (
+        <>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Navigate to={"/todo"} />}></Route>
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            ></Route>
+            <Route
+              path="/edit-profile"
+              element={
+                <ProtectedRoute>
+                  <EditProfile />
+                </ProtectedRoute>
+              }
+            ></Route>
+            <Route
+              path="/todo"
+              element={
+                <ProtectedRoute>
+                  <Todo />
+                </ProtectedRoute>
+              }
+            ></Route>
+          </Routes>
+        </>
+      ) : (
+        <Login />
+      )}
+    </>
+  );
+};
+
+export default App;
+```
+
+- /src/components/ProtectedRouter.js
+
+```js
+import { Navigate, useLocation } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "../atoms/userAtom";
+
+const ProtectedRoute = ({ children }) => {
+  // const userCurrent = useAuth(); // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
+  const location = useLocation();
+  console.log("location ", location);
+  return rUserData ? children : <Navigate to={location.pathname} />;
+};
+
+export default ProtectedRoute;
+```
+
+- /src/components/Login.js
+
+```js
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useState } from "react";
 
-import { auth, storage, db } from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "../atoms/userAtom";
+import { auth, db, storage } from "../firebaseConfig";
 import useAuth from "../hooks/useAuth";
 
 const Login = () => {
   const { userCurrent, setUserCurrent } = useAuth();
+  // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
+
   // 패스이동하기
   const navigate = useNavigate();
   // 현재 화면 상태 관리
@@ -224,7 +313,6 @@ const Login = () => {
     // 사용자 이미지 파일은 체크 하지 않았어요.
     // 만약, 이미지 업로드 안한 경우는 기본형 이미지 제공 예정
     // console.log("FB 회원정보 등록 시도 처리");
-
     fbJoin();
   };
 
@@ -238,6 +326,7 @@ const Login = () => {
       );
       // useState 는 실시간 갱신이 안되고, 함수종료되어야 갱신
       setUserCurrent(userCredential.user);
+      // setRUserCurrent(userCredential.user);
       // storage : 이미지 파일 업로드
       let imageUrl = "";
       // 사용자가 이미지를 업로드 한다면
@@ -259,8 +348,8 @@ const Login = () => {
       // 사용자 등록을 하면 즉시 FB 는 로그인 상태로 처리.
       // UI 와 흐름이 맞지 않으므로 강제로 로그아웃을 시킨다.
       await signOut(auth);
-
       setUserCurrent(null); // 인증정보삭제
+      setRUserData(null);
       setError("");
       setName("");
       setEmail("");
@@ -440,108 +529,23 @@ const Login = () => {
 export default Login;
 ```
 
-- Navbar.js
+- /src/Profile.js
 
 ```js
-import React, { useEffect } from "react";
-import useAuth from "../hooks/useAuth";
-import { Link, useNavigate } from "react-router-dom";
-import { FaUserCircle } from "react-icons/fa";
-import { signOut } from "firebase/auth";
-import { auth } from "../firebaseConfig";
-
-const Navbar = () => {
-  const { userCurrent, userData, setUserCurrent } = useAuth();
-  console.log("Navbar refreshUserData : ", userData);
-  const navigate = useNavigate();
-  const handleLogout = async () => {
-    // FB 에서 로그아웃
-    await signOut(auth);
-    setUserCurrent(null);
-    // 로그인으로 이동
-    navigate("/");
-  };
-  console.log("리랜더링이 되요..");
-  useEffect(() => {
-    console.log("Navbar userData :  ", userData);
-  }, [userCurrent]);
-
-  // 사용자가 로그인을 안 했다면 Navbar 출력하지 않는다.
-  // if (!userCurrent) {
-  //   return null;
-  // }
-
-  return (
-    <nav className="bg-gray-400 p-4">
-      <ul className="flex justify-around items-center">
-        <li>
-          <Link to={"/todo"} className="text-white hover:underline">
-            할일 목록
-          </Link>
-        </li>
-        {userData && (
-          <li className="text-white ml-4 flex items-center">
-            <Link
-              to={"/profile"}
-              className="flex items-center mr-4 hover:underline"
-            >
-              {userData.imageUrl ? (
-                <img
-                  src={userData.imageUrl}
-                  alt="Profile Image"
-                  className="w-8 h-8 rounded-full mr-2"
-                />
-              ) : (
-                <FaUserCircle className="w-8 h-8 text-gray-200 mr-2" />
-              )}
-              {userData.name} {userData.email}
-            </Link>
-            <button
-              onClick={() => {
-                handleLogout();
-              }}
-              className="p-2 bg-red-500 rounded text-white hover:bg-red-600"
-            >
-              로그아웃
-            </button>
-          </li>
-        )}
-      </ul>
-    </nav>
-  );
-};
-
-export default Navbar;
-```
-
-- ProtectedRoute.js
-
-```js
-import { Navigate } from "react-router-dom";
-import useAuth from "../hooks/useAuth";
-
-const ProtectedRoute = ({ children }) => {
-  const userCurrent = useAuth();
-  return userCurrent ? children : <Navigate to="/" />;
-};
-
-export default ProtectedRoute;
-```
-
-- Profile.js
-
-```js
-import React from "react";
-import { FaUserCircle } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { db, storage } from "../firebaseConfig";
+import { deleteUser } from "firebase/auth";
 import { deleteDoc, doc } from "firebase/firestore";
 import { deleteObject, ref } from "firebase/storage";
-import { deleteUser } from "firebase/auth";
+import { FaUserCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "../atoms/userAtom";
+import { db, storage } from "../firebaseConfig";
 import useAuth from "../hooks/useAuth";
 
 const Profile = () => {
-  const { userCurrent, userData } = useAuth();
+  const { userCurrent } = useAuth();
+  // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
 
   const navigate = useNavigate();
   const handleClickEdit = () => {
@@ -550,7 +554,6 @@ const Profile = () => {
 
   const handleClickDeleteUser = async () => {
     // console.log(userObject.userCurrent);
-
     // 탈퇴 여부 확인
     const flag = window.confirm(
       "정말 탈퇴 하시겠습니까? \n이 작업은 되돌릴 수 없습니다.",
@@ -562,7 +565,7 @@ const Profile = () => {
         const userDocRef = doc(db, "users", userCurrent?.uid);
         await deleteDoc(userDocRef);
         // 2. image 파일 삭제
-        if (userData?.imageUrl) {
+        if (rUserData?.imageUrl) {
           const imageRef = ref(
             storage,
             `users/${userCurrent?.uid}/profile.png`,
@@ -573,6 +576,9 @@ const Profile = () => {
         await deleteUser(userCurrent);
         // 4. 안내창
         alert("회원탈퇴가 완료되었습니다.");
+
+        setRUserData(null);
+
         // 5. 패스이동("/")
         navigate("/");
       } catch (error) {
@@ -585,19 +591,19 @@ const Profile = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <h1 className="text-2xl font-bold mb-4">프로필</h1>
-      {userData && (
+      {rUserData && (
         <div className="flex flex-col items-center">
-          {userData?.imageUrl ? (
+          {rUserData?.imageUrl ? (
             <img
-              src={userData?.imageUrl}
+              src={rUserData?.imageUrl}
               alt="Profile Image"
               className="w-32 h-32 rounded-full mr-2"
             />
           ) : (
             <FaUserCircle className="w-32 h-32 text-gray-400 mr-2" />
           )}
-          <p className="text-lg mb-2">이름 : {userData?.name}</p>
-          <p className="text-lg mb-4">이메일 : {userData?.email}</p>
+          <p className="text-lg mb-2">이름 : {rUserData?.name}</p>
+          <p className="text-lg mb-4">이메일 : {rUserData?.email}</p>
           <div className="flex space-x-4">
             <button
               onClick={() => {
@@ -625,23 +631,26 @@ const Profile = () => {
 export default Profile;
 ```
 
-- EditProfile.js
+- /src/EditProfile.js
 
 ```js
-import React, { useEffect, useState } from "react";
-import useAuth from "../hooks/useAuth";
-import { auth, db, storage } from "../firebaseConfig";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { updatePassword } from "firebase/auth";
+import { doc, updateDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "../atoms/userAtom";
+import { db, storage } from "../firebaseConfig";
+import useAuth from "../hooks/useAuth";
 
 const EditProfile = () => {
   const navigate = useNavigate();
   // 커스텀 훅 사용
-  const { userData, userCurrent, setUserData } = useAuth();
-  // console.log("EditProfile userData : ", userData);
+  const { userCurrent } = useAuth();
   // console.log("EditProfile userCurrent : ", userCurrent);
+  // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
 
   // 변경해야할 변수
   const [name, setName] = useState("");
@@ -707,9 +716,10 @@ const EditProfile = () => {
       // 문서 만들고 업데이트 실행
       const userDoc = doc(db, "users", userCurrent?.uid);
       await updateDoc(userDoc, update);
-      const nowData = { ...userData, ...update };
-      // console.log("업데이트된 문서내용 : ", nowData);
-      setUserData(nowData);
+      const nowData = { ...rUserData, ...update };
+      console.log("업데이트된 문서내용 : ", nowData);
+      // setUserData(nowData);
+      setRUserData(nowData);
     }
 
     // 사용자 인증 중 비밀번호 업데이트
@@ -727,16 +737,16 @@ const EditProfile = () => {
 
   // 초기값 설정
   useEffect(() => {
-    if (userData) {
-      setName(userData.name);
+    if (rUserData) {
+      setName(rUserData.name);
       // 기존 이름을 보관
-      setOriginName(userData.name);
-      setEmail(userData.email);
-      setPreviewImage(userData.imageUrl || "");
+      setOriginName(rUserData.name);
+      setEmail(rUserData.email);
+      setPreviewImage(rUserData.imageUrl || "");
       // 이미지 변경을 고려해서 기존 내용 보관
-      setOriginImage(userData.imageUrl || "");
+      setOriginImage(rUserData.imageUrl || "");
     }
-  }, [userData]);
+  }, [rUserData]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">

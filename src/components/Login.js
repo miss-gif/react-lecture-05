@@ -1,18 +1,23 @@
-import React, { useState } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { doc, setDoc } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { useState } from "react";
 
-import { auth, storage, db } from "../firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import { useRecoilState } from "recoil";
+import { recoil_UserData } from "../atoms/userAtom";
+import { auth, db, storage } from "../firebaseConfig";
 import useAuth from "../hooks/useAuth";
 
 const Login = () => {
   const { userCurrent, setUserCurrent } = useAuth();
+  // 사용자 정보를 저장함
+  const [rUserData, setRUserData] = useRecoilState(recoil_UserData);
+
   // 패스이동하기
   const navigate = useNavigate();
   // 현재 화면 상태 관리
@@ -105,7 +110,6 @@ const Login = () => {
     // 사용자 이미지 파일은 체크 하지 않았어요.
     // 만약, 이미지 업로드 안한 경우는 기본형 이미지 제공 예정
     // console.log("FB 회원정보 등록 시도 처리");
-
     fbJoin();
   };
 
@@ -119,6 +123,7 @@ const Login = () => {
       );
       // useState 는 실시간 갱신이 안되고, 함수종료되어야 갱신
       setUserCurrent(userCredential.user);
+      // setRUserCurrent(userCredential.user);
       // storage : 이미지 파일 업로드
       let imageUrl = "";
       // 사용자가 이미지를 업로드 한다면
@@ -140,8 +145,8 @@ const Login = () => {
       // 사용자 등록을 하면 즉시 FB 는 로그인 상태로 처리.
       // UI 와 흐름이 맞지 않으므로 강제로 로그아웃을 시킨다.
       await signOut(auth);
-
       setUserCurrent(null); // 인증정보삭제
+      setRUserData(null);
       setError("");
       setName("");
       setEmail("");
