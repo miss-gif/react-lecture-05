@@ -214,33 +214,33 @@ export default App;
 
 ## 10. FB 에 배포하기
 
-- firebase-tools 설치
-  : `npm install -g firebase-tools`
+: firebase-tools 설치
+  - `npm install -g firebase-tools`
 
-- 로그인하기
-  : `firebase login` (터미널)
-  : Allow Firebase to collect CLI and Emulator Suite usage and error reporting information? (Y/n)
-  : Y
-  : Success CLI 확인
+: 로그인하기
+  - `firebase login` (터미널)
+  - Allow Firebase to collect CLI and Emulator Suite usage and error reporting information? (Y/n)
+  - Y
+  - Success CLI 확인
 
-- 초기화
-  : `firebase init`
-  : Are you ready to proceed? (Y/n)
-  : Y
-  : Which Firebase features do you want to set up for this directory? Press Space to select features, then Enter to confirm your choices. (Press <space> to select, <a> to toggle all, <i> to invert
+: 초기화
+  - `firebase init`
+  - Are you ready to proceed? (Y/n)
+  - Y
+  - Which Firebase features do you want to set up for this directory? Press Space to select features, then Enter to confirm your choices. (Press <space> to select, <a> to toggle all, <i> to invert
   selection, and <enter> to proceed)
-  : 키보드 상하방향키 이동후 Hosting 항목 Space 바를 선택
-  : (\*) Hosting: Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys
-  : Please select an option: (Use arrow keys)
-  : Use an existing project
-  : 프로젝트 항목 선택
-  : 아래는 주의하세요. (리액트에서 npm run build 하시면 build 폴더에 배포)
-  : What do you want to use as your public directory? (public)
-  : 반드시 build 라고 작성해서 엔터키 입력해야 합니다.
-  : Configure as a single-page app (rewrite all urls to /index.html)? (y/N)
-  : Y 엔터
-  : Set up automatic builds and deploys with GitHub? (y/N)
-  : N 엔터
-  : firebase.json 과 .firebaserc 파일 생성 확인
-  : `npm run build`
+  - 키보드 상하방향키 이동후 Hosting 항목 Space 바를 선택
+  - (\*) Hosting: Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys
+  - Please select an option: (Use arrow keys)
+  - Use an existing project
+  - 프로젝트 항목 선택
+  - 아래는 주의하세요. (리액트에서 npm run build 하시면 build 폴더에 배포)
+  - What do you want to use as your public directory? (public)
+  - 반드시 build 라고 작성해서 엔터키 입력해야 합니다.
+  - Configure as a single-page app (rewrite all urls to /index.html)? (y/N)
+  - Y 엔터
+  - Set up automatic builds and deploys with GitHub? (y/N)
+  - N 엔터
+  - firebase.json 과 .firebaserc 파일 생성 확인
+  - `npm run build`
   : `firebase deploy`
